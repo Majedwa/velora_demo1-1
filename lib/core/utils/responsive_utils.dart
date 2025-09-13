@@ -1,5 +1,7 @@
-// lib/core/utils/responsive_utils.dart
+// lib/core/utils/responsive_utils.dart - نسخة محدثة لدعم جميع الأجهزة
 import 'package:flutter/material.dart';
+import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 class ResponsiveUtils {
   static late MediaQueryData _mediaQueryData;
@@ -13,24 +15,34 @@ class ResponsiveUtils {
   static late double safeBlockHorizontal;
   static late double safeBlockVertical;
   
-  // معايير الأجهزة
+  // معايير الأجهزة المحسنة
   static late bool isMobile;
   static late bool isTablet;
   static late bool isDesktop;
+  static late bool isSmallPhone;
+  static late bool isLargePhone;
+  static late bool isIOS;
+  static late bool isAndroid;
+  static late bool isWeb;
   
-  // حجم الخط
+  // أحجام النصوص المتكيفة
+  static late double textScaleFactor;
   static late double defaultTextSize;
   static late double smallTextSize;
   static late double mediumTextSize;
   static late double largeTextSize;
+  static late double extraLargeTextSize;
   
-  // المساحات
+  // المساحات المتكيفة
   static late double defaultSpace;
   static late double extraSmallSpace;
   static late double smallSpace;
   static late double mediumSpace;
   static late double largeSpace;
   static late double extraLargeSpace;
+  
+  // حواف آمنة للأجهزة ذات الشاشات المنحنية
+  static late EdgeInsets safePadding;
   
   static void init(BuildContext context) {
     _mediaQueryData = MediaQuery.of(context);
@@ -39,40 +51,107 @@ class ResponsiveUtils {
     blockSizeHorizontal = screenWidth / 100;
     blockSizeVertical = screenHeight / 100;
     
+    // حساب المناطق الآمنة
     _safeAreaHorizontal = _mediaQueryData.padding.left + _mediaQueryData.padding.right;
     _safeAreaVertical = _mediaQueryData.padding.top + _mediaQueryData.padding.bottom;
     safeBlockHorizontal = (screenWidth - _safeAreaHorizontal) / 100;
     safeBlockVertical = (screenHeight - _safeAreaVertical) / 100;
     
-    // تحديد نوع الجهاز
+    // الحواف الآمنة
+    safePadding = _mediaQueryData.padding;
+    
+    // تحديد نوع الجهاز بشكل أكثر دقة
+    isSmallPhone = screenWidth < 360;  // أجهزة صغيرة جداً
     isMobile = screenWidth < 600;
+    isLargePhone = screenWidth >= 360 && screenWidth < 600;
     isTablet = screenWidth >= 600 && screenWidth < 1200;
     isDesktop = screenWidth >= 1200;
     
-    // حجم الخط
-    defaultTextSize = isMobile ? 14 : isTablet ? 16 : 18;
-    smallTextSize = isMobile ? 12 : isTablet ? 14 : 16;
-    mediumTextSize = isMobile ? 16 : isTablet ? 18 : 20;
-    largeTextSize = isMobile ? 20 : isTablet ? 24 : 28;
+    // تحديد نظام التشغيل
+    isWeb = kIsWeb;
+    if (!isWeb) {
+      isIOS = Platform.isIOS;
+      isAndroid = Platform.isAndroid;
+    } else {
+      isIOS = false;
+      isAndroid = false;
+    }
     
-    // المساحات
-    extraSmallSpace = isMobile ? 4 : isTablet ? 6 : 8;
-    smallSpace = isMobile ? 8 : isTablet ? 12 : 16;
-    defaultSpace = isMobile ? 16 : isTablet ? 20 : 24;
-    mediumSpace = isMobile ? 24 : isTablet ? 32 : 40;
-    largeSpace = isMobile ? 32 : isTablet ? 48 : 64;
-    extraLargeSpace = isMobile ? 48 : isTablet ? 64 : 80;
+    // عامل تكبير النص من إعدادات النظام
+    textScaleFactor = _mediaQueryData.textScaleFactor.clamp(0.8, 1.3);
+    
+    // حجم الخط المتكيف مع حجم الشاشة وإعدادات النظام
+    if (isSmallPhone) {
+      defaultTextSize = 12 * textScaleFactor;
+      smallTextSize = 10 * textScaleFactor;
+      mediumTextSize = 14 * textScaleFactor;
+      largeTextSize = 16 * textScaleFactor;
+      extraLargeTextSize = 20 * textScaleFactor;
+    } else if (isMobile) {
+      defaultTextSize = 14 * textScaleFactor;
+      smallTextSize = 12 * textScaleFactor;
+      mediumTextSize = 16 * textScaleFactor;
+      largeTextSize = 18 * textScaleFactor;
+      extraLargeTextSize = 24 * textScaleFactor;
+    } else if (isTablet) {
+      defaultTextSize = 16 * textScaleFactor;
+      smallTextSize = 14 * textScaleFactor;
+      mediumTextSize = 18 * textScaleFactor;
+      largeTextSize = 22 * textScaleFactor;
+      extraLargeTextSize = 28 * textScaleFactor;
+    } else {
+      defaultTextSize = 18 * textScaleFactor;
+      smallTextSize = 16 * textScaleFactor;
+      mediumTextSize = 20 * textScaleFactor;
+      largeTextSize = 24 * textScaleFactor;
+      extraLargeTextSize = 32 * textScaleFactor;
+    }
+    
+    // المساحات المتكيفة
+    if (isSmallPhone) {
+      extraSmallSpace = 2;
+      smallSpace = 4;
+      defaultSpace = 8;
+      mediumSpace = 12;
+      largeSpace = 16;
+      extraLargeSpace = 24;
+    } else if (isMobile) {
+      extraSmallSpace = 4;
+      smallSpace = 8;
+      defaultSpace = 16;
+      mediumSpace = 24;
+      largeSpace = 32;
+      extraLargeSpace = 48;
+    } else if (isTablet) {
+      extraSmallSpace = 6;
+      smallSpace = 12;
+      defaultSpace = 20;
+      mediumSpace = 32;
+      largeSpace = 48;
+      extraLargeSpace = 64;
+    } else {
+      extraSmallSpace = 8;
+      smallSpace = 16;
+      defaultSpace = 24;
+      mediumSpace = 40;
+      largeSpace = 64;
+      extraLargeSpace = 80;
+    }
   }
   
+  // دالة للحصول على عرض متجاوب
   static double getResponsiveWidth(double percentage) {
     return safeBlockHorizontal * percentage;
   }
 
+  // دالة للحصول على ارتفاع متجاوب
   static double getResponsiveHeight(double percentage) {
     return safeBlockVertical * percentage;
   }
   
+  // دالة محسنة للحصول على padding متجاوب
   static EdgeInsets getResponsivePadding({
+    double? all,
     double? horizontal,
     double? vertical,
     double? left,
@@ -80,58 +159,149 @@ class ResponsiveUtils {
     double? top,
     double? bottom,
   }) {
+    if (all != null) {
+      return EdgeInsets.all(getAdaptiveValue(all));
+    }
+    
     return EdgeInsets.only(
-      left: left != null ? getResponsiveWidth(left) : (horizontal != null ? getResponsiveWidth(horizontal) : 0),
-      right: right != null ? getResponsiveWidth(right) : (horizontal != null ? getResponsiveWidth(horizontal) : 0),
-      top: top != null ? getResponsiveHeight(top) : (vertical != null ? getResponsiveHeight(vertical) : 0),
-      bottom: bottom != null ? getResponsiveHeight(bottom) : (vertical != null ? getResponsiveHeight(vertical) : 0),
+      left: left != null ? getAdaptiveValue(left) : 
+            (horizontal != null ? getAdaptiveValue(horizontal) : 0),
+      right: right != null ? getAdaptiveValue(right) : 
+             (horizontal != null ? getAdaptiveValue(horizontal) : 0),
+      top: top != null ? getAdaptiveValue(top) : 
+           (vertical != null ? getAdaptiveValue(vertical) : 0),
+      bottom: bottom != null ? getAdaptiveValue(bottom) : 
+              (vertical != null ? getAdaptiveValue(vertical) : 0),
     );
   }
   
-  static double getResponsiveFontSize(double size) {
-    double finalSize = safeBlockHorizontal * size;
+  // دالة للحصول على قيمة متكيفة بناءً على حجم الشاشة
+  static double getAdaptiveValue(double baseValue) {
+    if (isSmallPhone) {
+      return baseValue * 0.8;
+    } else if (isMobile) {
+      return baseValue;
+    } else if (isTablet) {
+      return baseValue * 1.2;
+    } else {
+      return baseValue * 1.5;
+    }
+  }
+  
+  // دالة محسنة للحصول على حجم خط متجاوب
+  static double getResponsiveFontSize(double baseSize) {
+    double scaledSize;
     
-    // تحديد حد أدنى وحد أقصى لحجم الخط
-    if (finalSize < 12) {
-      finalSize = 12;
-    } else if (finalSize > 32) {
-      finalSize = 32;
+    if (isSmallPhone) {
+      scaledSize = baseSize * 0.85;
+    } else if (isMobile) {
+      scaledSize = baseSize;
+    } else if (isTablet) {
+      scaledSize = baseSize * 1.1;
+    } else {
+      scaledSize = baseSize * 1.2;
     }
     
-    return finalSize;
+    // تطبيق عامل تكبير النص من إعدادات النظام
+    scaledSize = scaledSize * textScaleFactor;
+    
+    // تحديد حد أدنى وحد أقصى لحجم الخط
+    return scaledSize.clamp(10.0, 40.0);
+  }
+  
+  // دالة للحصول على ارتفاع مناسب للأزرار
+  static double getButtonHeight() {
+    if (isSmallPhone) return 42;
+    if (isMobile) return 48;
+    if (isTablet) return 56;
+    return 60;
+  }
+  
+  // دالة للحصول على حجم الأيقونات
+  static double getIconSize({bool isLarge = false}) {
+    if (isLarge) {
+      if (isSmallPhone) return 28;
+      if (isMobile) return 32;
+      if (isTablet) return 40;
+      return 48;
+    } else {
+      if (isSmallPhone) return 20;
+      if (isMobile) return 24;
+      if (isTablet) return 28;
+      return 32;
+    }
+  }
+  
+  // دالة للتحقق من اتجاه الشاشة
+  static bool isPortrait(BuildContext context) {
+    return MediaQuery.of(context).orientation == Orientation.portrait;
+  }
+  
+  static bool isLandscape(BuildContext context) {
+    return MediaQuery.of(context).orientation == Orientation.landscape;
+  }
+  
+  // دالة للحصول على عدد الأعمدة في الشبكة
+  static int getGridColumns() {
+    if (isSmallPhone) return 1;
+    if (isMobile) return 2;
+    if (isTablet) return 3;
+    return 4;
+  }
+  
+  // دالة للحصول على نسبة العرض إلى الارتفاع للبطاقات
+  static double getCardAspectRatio() {
+    if (isSmallPhone) return 1.2;
+    if (isMobile) return 1.3;
+    if (isTablet) return 1.4;
+    return 1.5;
   }
 }
 
-// امتداد لسهولة استخدام الأدوات المساعدة
+// امتداد محسن لسهولة الاستخدام
 extension ResponsiveExtension on BuildContext {
-  // احصل على قيم الاستجابة
+  // معلومات الشاشة
   double get screenWidth => ResponsiveUtils.screenWidth;
   double get screenHeight => ResponsiveUtils.screenHeight;
+  EdgeInsets get safePadding => ResponsiveUtils.safePadding;
   
-  // تحقق من نوع الجهاز
+  // نوع الجهاز
+  bool get isSmallPhone => ResponsiveUtils.isSmallPhone;
   bool get isMobile => ResponsiveUtils.isMobile;
   bool get isTablet => ResponsiveUtils.isTablet;
   bool get isDesktop => ResponsiveUtils.isDesktop;
+  bool get isIOS => ResponsiveUtils.isIOS;
+  bool get isAndroid => ResponsiveUtils.isAndroid;
   
-  // احصل على المساحات
+  // المساحات المتكيفة
   double get xs => ResponsiveUtils.extraSmallSpace;
   double get sm => ResponsiveUtils.smallSpace;
   double get md => ResponsiveUtils.mediumSpace;
   double get lg => ResponsiveUtils.largeSpace;
   double get xl => ResponsiveUtils.extraLargeSpace;
   
-  // احصل على أحجام الخطوط
-  double get textSm => ResponsiveUtils.smallTextSize;
+  // أحجام النصوص المتكيفة
+  double get textXs => ResponsiveUtils.smallTextSize;
+  double get textSm => ResponsiveUtils.defaultTextSize;
   double get textMd => ResponsiveUtils.mediumTextSize;
   double get textLg => ResponsiveUtils.largeTextSize;
+  double get textXl => ResponsiveUtils.extraLargeTextSize;
   
-  // طرق مساعدة
+  // دوال مساعدة
   double rw(double percentage) => ResponsiveUtils.getResponsiveWidth(percentage);
   double rh(double percentage) => ResponsiveUtils.getResponsiveHeight(percentage);
   double fontSize(double size) => ResponsiveUtils.getResponsiveFontSize(size);
+  double adaptive(double value) => ResponsiveUtils.getAdaptiveValue(value);
+  
+  // أحجام العناصر
+  double get buttonHeight => ResponsiveUtils.getButtonHeight();
+  double iconSize({bool isLarge = false}) => ResponsiveUtils.getIconSize(isLarge: isLarge);
+  int get gridColumns => ResponsiveUtils.getGridColumns();
+  double get cardAspectRatio => ResponsiveUtils.getCardAspectRatio();
   
   // الحصول على padding متجاوب
-  EdgeInsets padding({
+  EdgeInsets responsivePadding({
+    double? all,
     double? horizontal,
     double? vertical,
     double? left,
@@ -140,6 +310,7 @@ extension ResponsiveExtension on BuildContext {
     double? bottom,
   }) {
     return ResponsiveUtils.getResponsivePadding(
+      all: all,
       horizontal: horizontal,
       vertical: vertical,
       left: left,

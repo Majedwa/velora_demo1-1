@@ -13,6 +13,7 @@ import '../../providers/user_provider.dart';
 import '../../widgets/common/custom_app_bar.dart';
 import '../../widgets/common/loading_indicator.dart';
 import '../../widgets/common/password_strength_indicator.dart';
+import '../../widgets/common/arabic_text_field.dart'; // أضف هذا الاستيراد
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -399,16 +400,17 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
                             else
                               const SizedBox.shrink(),
                             
-                            // زر الخطوة التالية أو التسجيل
+                            // زر الخطوة التالية أو التسجيل - محدث
                             SizedBox(
                               width: 160,
-                              height: 48,
+                              height: 54,
                               child: ElevatedButton(
                                 onPressed: _currentStep < _steps.length - 1 ? _nextStep : _register,
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: AppColors.primary,
                                   foregroundColor: Colors.white,
                                   elevation: 2,
+                                  padding: const EdgeInsets.symmetric(horizontal: 20),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(12),
                                   ),
@@ -418,6 +420,7 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
                                   style: const TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
+                                    height: 1.3,
                                   ),
                                 ),
                               ),
@@ -488,49 +491,32 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // الاسم الكامل
         const Text(
           'أدخل المعلومات الشخصية',
           style: TextStyle(
             fontSize: 14,
             color: AppColors.textSecondary,
+            height: 1.5,
           ),
         ),
         const SizedBox(height: 24),
         
-        TextFormField(
+        ArabicTextField(
           controller: _nameController,
-          decoration: InputDecoration(
-            labelText: 'الاسم الكامل',
-            hintText: 'أدخل اسمك الكامل',
-            prefixIcon: const Icon(PhosphorIcons.user),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none,
-            ),
-            filled: true,
-            fillColor: Colors.grey[100],
-          ),
+          labelText: 'الاسم الكامل',
+          hintText: 'أدخل اسمك الكامل',
+          prefixIcon: PhosphorIcons.user,
           validator: Validators.validateName,
           textInputAction: TextInputAction.next,
         ),
         const SizedBox(height: 16),
         
-        // رقم الهاتف
-        TextFormField(
+        ArabicTextField(
           controller: _phoneController,
+          labelText: 'رقم الهاتف',
+          hintText: 'أدخل رقم هاتفك',
+          prefixIcon: PhosphorIcons.phone,
           keyboardType: TextInputType.phone,
-          decoration: InputDecoration(
-            labelText: 'رقم الهاتف',
-            hintText: 'أدخل رقم هاتفك',
-            prefixIcon: const Icon(PhosphorIcons.phone),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none,
-            ),
-            filled: true,
-            fillColor: Colors.grey[100],
-          ),
           validator: Validators.validatePhone,
           textInputAction: TextInputAction.next,
         ),
@@ -548,59 +534,42 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
           style: TextStyle(
             fontSize: 14,
             color: AppColors.textSecondary,
+            height: 1.5,
           ),
         ),
         const SizedBox(height: 24),
         
-        // البريد الإلكتروني
-        TextFormField(
+        ArabicTextField(
           controller: _emailController,
+          labelText: 'البريد الإلكتروني',
+          hintText: 'أدخل بريدك الإلكتروني',
+          prefixIcon: PhosphorIcons.envelope,
           keyboardType: TextInputType.emailAddress,
-          decoration: InputDecoration(
-            labelText: 'البريد الإلكتروني',
-            hintText: 'أدخل بريدك الإلكتروني',
-            prefixIcon: const Icon(PhosphorIcons.envelope),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none,
-            ),
-            filled: true,
-            fillColor: Colors.grey[100],
-          ),
           validator: Validators.validateEmail,
           textInputAction: TextInputAction.next,
         ),
         const SizedBox(height: 16),
         
-        // كلمة المرور
-        TextFormField(
+        ArabicTextField(
           controller: _passwordController,
+          labelText: 'كلمة المرور',
+          hintText: 'أدخل كلمة المرور',
+          prefixIcon: PhosphorIcons.lock,
           obscureText: !_isPasswordVisible,
-          decoration: InputDecoration(
-            labelText: 'كلمة المرور',
-            hintText: 'أدخل كلمة المرور',
-            prefixIcon: const Icon(PhosphorIcons.lock),
-            suffixIcon: IconButton(
-              icon: Icon(
-                _isPasswordVisible
-                    ? PhosphorIcons.eye_slash
-                    : PhosphorIcons.eye,
-              ),
-              onPressed: _togglePasswordVisibility,
-            ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none,
-            ),
-            filled: true,
-            fillColor: Colors.grey[100],
-          ),
           validator: Validators.validatePassword,
           textInputAction: TextInputAction.next,
+          suffixIcon: IconButton(
+            icon: Icon(
+              _isPasswordVisible
+                  ? PhosphorIcons.eye_slash
+                  : PhosphorIcons.eye,
+              color: AppColors.textSecondary,
+            ),
+            onPressed: _togglePasswordVisibility,
+          ),
         ),
         const SizedBox(height: 8),
         
-        // مؤشر قوة كلمة المرور
         PasswordStrengthIndicator(
           strength: _passwordStrength,
           text: _passwordStrengthText,
@@ -608,29 +577,12 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
         ),
         const SizedBox(height: 16),
         
-        // تأكيد كلمة المرور
-        TextFormField(
+        ArabicTextField(
           controller: _confirmPasswordController,
+          labelText: 'تأكيد كلمة المرور',
+          hintText: 'أعد إدخال كلمة المرور',
+          prefixIcon: PhosphorIcons.lock_key,
           obscureText: !_isConfirmPasswordVisible,
-          decoration: InputDecoration(
-            labelText: 'تأكيد كلمة المرور',
-            hintText: 'أعد إدخال كلمة المرور',
-            prefixIcon: const Icon(PhosphorIcons.lock_key),
-            suffixIcon: IconButton(
-              icon: Icon(
-                _isConfirmPasswordVisible
-                    ? PhosphorIcons.eye_slash
-                    : PhosphorIcons.eye,
-              ),
-              onPressed: _toggleConfirmPasswordVisibility,
-            ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none,
-            ),
-            filled: true,
-            fillColor: Colors.grey[100],
-          ),
           validator: (value) {
             if (value != _passwordController.text) {
               return 'كلمات المرور غير متطابقة';
@@ -638,6 +590,15 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
             return null;
           },
           textInputAction: TextInputAction.done,
+          suffixIcon: IconButton(
+            icon: Icon(
+              _isConfirmPasswordVisible
+                  ? PhosphorIcons.eye_slash
+                  : PhosphorIcons.eye,
+              color: AppColors.textSecondary,
+            ),
+            onPressed: _toggleConfirmPasswordVisibility,
+          ),
         ),
       ],
     );

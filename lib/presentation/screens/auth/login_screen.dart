@@ -1,4 +1,4 @@
-// lib/presentation/screens/auth/login_screen.dart
+// lib/presentation/screens/auth/login_screen.dart - نسخة متجاوبة محسنة
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
@@ -10,6 +10,7 @@ import '../../../core/utils/validators.dart';
 import '../../../core/utils/responsive_utils.dart';
 import '../../providers/user_provider.dart';
 import '../../widgets/common/loading_indicator.dart';
+import '../../widgets/common/arabic_text_field.dart'; // أضف هذا الاستيراد
 import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -23,6 +24,8 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _scrollController = ScrollController();
+  
   bool _isPasswordVisible = false;
   bool _isLoading = false;
   bool _rememberMe = false;
@@ -35,7 +38,6 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
   void initState() {
     super.initState();
     
-    // إعداد متحكم الرسوم المتحركة
     _animationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 800),
@@ -62,6 +64,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _scrollController.dispose();
     _animationController.dispose();
     super.dispose();
   }
@@ -149,12 +152,16 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
   Widget build(BuildContext context) {
     // تهيئة أدوات الاستجابة
     ResponsiveUtils.init(context);
-    final screenSize = MediaQuery.of(context).size;
+    
+    // استخدام الامتداد للحصول على القيم المتجاوبة
+    final isKeyboardOpen = MediaQuery.of(context).viewInsets.bottom > 0;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final availableHeight = screenHeight - MediaQuery.of(context).viewInsets.bottom;
 
     return Scaffold(
       body: Stack(
         children: [
-          // خلفية مع تدرج
+          // خلفية متدرجة
           Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
@@ -171,261 +178,290 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
           
           // المحتوى
           SafeArea(
-            child: SingleChildScrollView(
-              child: SizedBox(
-                height: screenSize.height - MediaQuery.of(context).padding.top - MediaQuery.of(context).padding.bottom,
-                child: Padding(
-                  padding: const EdgeInsets.all(24.0),
-                  child: FadeTransition(
-                    opacity: _fadeAnimation,
-                    child: SlideTransition(
-                      position: _slideAnimation,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          const SizedBox(height: 40),
-                          // الشعار
-                          Center(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return SingleChildScrollView(
+                  controller: _scrollController,
+                  physics: const ClampingScrollPhysics(),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minHeight: constraints.maxHeight,
+                    ),
+                    child: IntrinsicHeight(
+                      child: Padding(
+                        padding: context.responsivePadding(
+                          horizontal: context.isSmallPhone ? 16 : 24,
+                          vertical: context.isSmallPhone ? 16 : 24,
+                        ),
+                        child: FadeTransition(
+                          opacity: _fadeAnimation,
+                          child: SlideTransition(
+                            position: _slideAnimation,
                             child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
-                                Hero(
-                                  tag: 'logo',
-                                  child: Container(
-                                    width: 100,
-                                    height: 100,
-                                    padding: const EdgeInsets.all(16),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      borderRadius: BorderRadius.circular(20),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: AppColors.primary.withOpacity(0.3),
-                                          blurRadius: 15,
-                                          offset: const Offset(0, 5),
+                                // مساحة علوية متكيفة
+                                SizedBox(height: context.adaptive(20)),
+                                
+                                // الشعار
+                                if (!isKeyboardOpen || !context.isSmallPhone)
+                                  Center(
+                                    child: Column(
+                                      children: [
+                                        Hero(
+                                          tag: 'logo',
+                                          child: Container(
+                                            width: context.adaptive(100),
+                                            height: context.adaptive(100),
+                                            padding: EdgeInsets.all(context.adaptive(16)),
+                                            decoration: BoxDecoration(
+                                              color: Colors.white,
+                                              borderRadius: BorderRadius.circular(20),
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: AppColors.primary.withOpacity(0.3),
+                                                  blurRadius: 15,
+                                                  offset: const Offset(0, 5),
+                                                ),
+                                              ],
+                                            ),
+                                            child: Image.asset(
+                                              AppConstants.logoPath,
+                                              fit: BoxFit.contain,
+                                            ),
+                                          ),
+                                        ),
+                                        SizedBox(height: context.sm),
+                                        Text(
+                                          'Velora',
+                                          style: TextStyle(
+                                            fontSize: context.fontSize(32),
+                                            fontWeight: FontWeight.bold,
+                                            color: AppColors.primary,
+                                          ),
+                                        ),
+                                        SizedBox(height: context.xs),
+                                        Text(
+                                          'استكشف فلسطين',
+                                          style: TextStyle(
+                                            fontSize: context.fontSize(18),
+                                            color: AppColors.textSecondary,
+                                          ),
                                         ),
                                       ],
                                     ),
-                                    child: Image.asset(
-                                      AppConstants.logoPath,
-                                      fit: BoxFit.contain,
+                                  ),
+                                
+                                SizedBox(height: context.adaptive(32)),
+
+                                // النموذج
+                                Expanded(
+                                  child: Form(
+                                    key: _formKey,
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'تسجيل الدخول',
+                                          style: TextStyle(
+                                            fontSize: context.fontSize(24),
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        SizedBox(height: context.xs),
+                                        Text(
+                                          'أدخل بياناتك للوصول إلى حسابك',
+                                          style: TextStyle(
+                                            fontSize: context.fontSize(14),
+                                            color: AppColors.textSecondary,
+                                          ),
+                                        ),
+                                        SizedBox(height: context.md),
+                                        
+                                        // البريد الإلكتروني
+                                        ArabicTextField(
+                                          controller: _emailController,
+                                          labelText: 'البريد الإلكتروني',
+                                          hintText: 'أدخل بريدك الإلكتروني',
+                                          prefixIcon: PhosphorIcons.envelope,
+                                          keyboardType: TextInputType.emailAddress,
+                                          validator: Validators.validateEmail,
+                                          textInputAction: TextInputAction.next,
+                                        ),
+                                        SizedBox(height: context.sm),
+                                        
+                                        // كلمة المرور
+                                        ArabicTextField(
+                                          controller: _passwordController,
+                                          labelText: 'كلمة المرور',
+                                          hintText: 'أدخل كلمة المرور',
+                                          prefixIcon: PhosphorIcons.lock,
+                                          obscureText: !_isPasswordVisible,
+                                          validator: Validators.validatePassword,
+                                          textInputAction: TextInputAction.done,
+                                          onFieldSubmitted: (_) => _login(),
+                                          suffixIcon: IconButton(
+                                            icon: Icon(
+                                              _isPasswordVisible
+                                                  ? PhosphorIcons.eye_slash
+                                                  : PhosphorIcons.eye,
+                                              size: context.iconSize(),
+                                              color: AppColors.textSecondary,
+                                            ),
+                                            onPressed: _togglePasswordVisibility,
+                                          ),
+                                        ),
+                                        SizedBox(height: context.xs),
+                                        
+                                        // تذكرني ونسيت كلمة المرور
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Row(
+                                              children: [
+                                                SizedBox(
+                                                  width: 24,
+                                                  height: 24,
+                                                  child: Checkbox(
+                                                    value: _rememberMe,
+                                                    onChanged: (value) {
+                                                      setState(() {
+                                                        _rememberMe = value ?? false;
+                                                      });
+                                                    },
+                                                    activeColor: AppColors.primary,
+                                                    shape: RoundedRectangleBorder(
+                                                      borderRadius: BorderRadius.circular(4),
+                                                    ),
+                                                  ),
+                                                ),
+                                                SizedBox(width: context.xs),
+                                                Text(
+                                                  'تذكرني',
+                                                  style: TextStyle(
+                                                    fontSize: context.fontSize(14),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            TextButton(
+                                              onPressed: () {
+                                                // نسيت كلمة المرور
+                                              },
+                                              child: Text(
+                                                'نسيت كلمة المرور؟',
+                                                style: TextStyle(
+                                                  fontSize: context.fontSize(14),
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        SizedBox(height: context.md),
+                                        
+                                        // زر تسجيل الدخول - محدث
+                                        SizedBox(
+                                          width: double.infinity,
+                                          height: 54,
+                                          child: ElevatedButton(
+                                            onPressed: _isLoading ? null : _login,
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: AppColors.primary,
+                                              foregroundColor: Colors.white,
+                                              elevation: 2,
+                                              padding: const EdgeInsets.symmetric(
+                                                horizontal: 24,
+                                                vertical: 0,
+                                              ),
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius: BorderRadius.circular(12),
+                                              ),
+                                            ),
+                                            child: Text(
+                                              'تسجيل الدخول',
+                                              style: TextStyle(
+                                                fontSize: context.fontSize(16),
+                                                fontWeight: FontWeight.bold,
+                                                height: 1.3,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        SizedBox(height: context.sm),
+                                        
+                                        // زر الدخول كضيف - محدث
+                                        SizedBox(
+                                          width: double.infinity,
+                                          height: 54,
+                                          child: OutlinedButton(
+                                            onPressed: _isLoading ? null : _loginAsGuest,
+                                            style: OutlinedButton.styleFrom(
+                                              foregroundColor: AppColors.primary,
+                                              side: const BorderSide(
+                                                color: AppColors.primary,
+                                                width: 1.5,
+                                              ),
+                                              padding: const EdgeInsets.symmetric(
+                                                horizontal: 24,
+                                                vertical: 0,
+                                              ),
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius: BorderRadius.circular(12),
+                                              ),
+                                            ),
+                                            child: Text(
+                                              'الدخول كضيف',
+                                              style: TextStyle(
+                                                fontSize: context.fontSize(16),
+                                                fontWeight: FontWeight.bold,
+                                                height: 1.3,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        
+                                        const Spacer(),
+                                        // رابط التسجيل
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            Text(
+                                              'ليس لديك حساب؟',
+                                              style: TextStyle(
+                                                fontSize: context.fontSize(14),
+                                              ),
+                                            ),
+                                            TextButton(
+                                              onPressed: () {
+                                                Navigator.of(context).push(
+                                                  MaterialPageRoute(
+                                                    builder: (context) => const RegisterScreen(),
+                                                  ),
+                                                );
+                                              },
+                                              child: Text(
+                                                'إنشاء حساب',
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: context.fontSize(14),
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
                                     ),
-                                  ),
-                                ),
-                                const SizedBox(height: 16),
-                                const Text(
-                                  'Velora',
-                                  style: TextStyle(
-                                    fontSize: 32,
-                                    fontWeight: FontWeight.bold,
-                                    color: AppColors.primary,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                const Text(
-                                  'استكشف فلسطين',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    color: AppColors.textSecondary,
                                   ),
                                 ),
                               ],
                             ),
                           ),
-                          const SizedBox(height: 48),
-
-                          // النموذج
-                          Expanded(
-                            child: Form(
-                              key: _formKey,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    'تسجيل الدخول',
-                                    style: TextStyle(
-                                      fontSize: 24,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  const Text(
-                                    'أدخل بياناتك للوصول إلى حسابك',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      color: AppColors.textSecondary,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 24),
-                                  
-                                  // البريد الإلكتروني
-                                  TextFormField(
-                                    controller: _emailController,
-                                    keyboardType: TextInputType.emailAddress,
-                                    decoration: InputDecoration(
-                                      labelText: 'البريد الإلكتروني',
-                                      hintText: 'أدخل بريدك الإلكتروني',
-                                      prefixIcon: const Icon(PhosphorIcons.envelope),
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                        borderSide: BorderSide.none,
-                                      ),
-                                      filled: true,
-                                      fillColor: Colors.grey[100],
-                                    ),
-                                    validator: Validators.validateEmail,
-                                    textInputAction: TextInputAction.next,
-                                  ),
-                                  const SizedBox(height: 16),
-                                  
-                                  // كلمة المرور
-                                  TextFormField(
-                                    controller: _passwordController,
-                                    obscureText: !_isPasswordVisible,
-                                    decoration: InputDecoration(
-                                      labelText: 'كلمة المرور',
-                                      hintText: 'أدخل كلمة المرور',
-                                      prefixIcon: const Icon(PhosphorIcons.lock),
-                                      suffixIcon: IconButton(
-                                        icon: Icon(
-                                          _isPasswordVisible
-                                              ? PhosphorIcons.eye_slash
-                                              : PhosphorIcons.eye,
-                                        ),
-                                        onPressed: _togglePasswordVisibility,
-                                      ),
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                        borderSide: BorderSide.none,
-                                      ),
-                                      filled: true,
-                                      fillColor: Colors.grey[100],
-                                    ),
-                                    validator: Validators.validatePassword,
-                                    textInputAction: TextInputAction.done,
-                                    onFieldSubmitted: (_) => _login(),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  
-                                  // تذكرني ونسيت كلمة المرور
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Row(
-                                        children: [
-                                          Checkbox(
-                                            value: _rememberMe,
-                                            onChanged: (value) {
-                                              setState(() {
-                                                _rememberMe = value ?? false;
-                                              });
-                                            },
-                                            activeColor: AppColors.primary,
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius: BorderRadius.circular(4),
-                                            ),
-                                          ),
-                                          const Text(
-                                            'تذكرني',
-                                            style: TextStyle(
-                                              fontSize: 14,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      TextButton(
-                                        onPressed: () {
-                                          // نسيت كلمة المرور
-                                        },
-                                        child: const Text('نسيت كلمة المرور؟'),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 24),
-                                  
-                                  // زر تسجيل الدخول
-                                  SizedBox(
-                                    width: double.infinity,
-                                    height: 50,
-                                    child: ElevatedButton(
-                                      onPressed: _isLoading ? null : _login,
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: AppColors.primary,
-                                        foregroundColor: Colors.white,
-                                        elevation: 2,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(12),
-                                        ),
-                                      ),
-                                      child: const Text(
-                                        'تسجيل الدخول',
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 16),
-                                  
-                                  // زر الدخول كضيف
-                                  SizedBox(
-                                    width: double.infinity,
-                                    height: 50,
-                                    child: OutlinedButton(
-                                      onPressed: _isLoading ? null : _loginAsGuest,
-                                      style: OutlinedButton.styleFrom(
-                                        foregroundColor: AppColors.primary,
-                                        side: const BorderSide(
-                                          color: AppColors.primary,
-                                          width: 1.5,
-                                        ),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(12),
-                                        ),
-                                      ),
-                                      child: const Text(
-                                        'الدخول كضيف',
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  
-                                  const Spacer(),
-                                  // رابط التسجيل
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      const Text('ليس لديك حساب؟'),
-                                      TextButton(
-                                        onPressed: () {
-                                          Navigator.of(context).push(
-                                            MaterialPageRoute(
-                                              builder: (context) => const RegisterScreen(),
-                                            ),
-                                          );
-                                        },
-                                        child: const Text(
-                                          'إنشاء حساب',
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ),
+                );
+              },
             ),
           ),
           

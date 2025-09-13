@@ -142,7 +142,7 @@ class AppTheme {
           foregroundColor: Colors.white,
           elevation: 2,
           shadowColor: AppColors.primary.withOpacity(0.3),
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
@@ -150,7 +150,7 @@ class AppTheme {
             fontSize: 16,
             fontWeight: FontWeight.w600,
           ),
-          minimumSize: const Size(double.infinity, 50),
+          minimumSize: const Size(double.infinity, 54),
         ),
       ),
       
@@ -158,7 +158,7 @@ class AppTheme {
         style: OutlinedButton.styleFrom(
           foregroundColor: AppColors.primary,
           side: const BorderSide(color: AppColors.primary, width: 1.5),
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
@@ -166,7 +166,7 @@ class AppTheme {
             fontSize: 16,
             fontWeight: FontWeight.w600,
           ),
-          minimumSize: const Size(double.infinity, 50),
+          minimumSize: const Size(double.infinity, 54),
         ),
       ),
       
@@ -203,9 +203,12 @@ class AppTheme {
         surfaceTintColor: Colors.transparent,
       ),
       
+      // تعديل InputDecorationTheme لحل مشكلة المحاذاة
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: Colors.grey[100],
+        isDense: false,
+        alignLabelWithHint: true,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,
@@ -222,13 +225,38 @@ class AppTheme {
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: AppColors.error, width: 1.5),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-        hintStyle: TextStyle(color: AppColors.textSecondary),
-        labelStyle: TextStyle(color: AppColors.textSecondary),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: AppColors.error, width: 1.5),
+        ),
+        // تعديل padding لحل مشكلة المحاذاة
+        contentPadding: EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: isArabic ? 20 : 18,
+        ),
+        hintStyle: TextStyle(
+          color: AppColors.textSecondary,
+          height: isArabic ? 1.5 : 1.3,
+          fontSize: 14,
+        ),
+        labelStyle: TextStyle(
+          color: AppColors.textSecondary,
+          height: isArabic ? 1.5 : 1.3,
+          fontSize: 14,
+        ),
+        errorStyle: TextStyle(
+          color: AppColors.error,
+          height: 1.3,
+          fontSize: 12,
+        ),
         prefixIconColor: AppColors.primary,
         suffixIconColor: AppColors.textSecondary,
         floatingLabelBehavior: FloatingLabelBehavior.auto,
-        floatingLabelStyle: TextStyle(color: AppColors.primary),
+        floatingLabelStyle: TextStyle(
+          color: AppColors.primary,
+          height: isArabic ? 1.5 : 1.3,
+          fontSize: 14,
+        ),
       ),
       
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
@@ -324,7 +352,6 @@ class AppTheme {
         labelPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       ),
       
-      // Material 3 themes
       snackBarTheme: SnackBarThemeData(
         backgroundColor: Colors.grey[900],
         contentTextStyle: const TextStyle(color: Colors.white),
@@ -368,9 +395,6 @@ class AppTheme {
   }
   
   static ThemeData darkTheme(String languageCode) {
-    // TODO: نحتاج لتطبيق سمة الوضع الداكن بشكل كامل
-    // للتبسيط، نستخدم سمة الوضع الفاتح مع بعض التعديلات
-    
     final ThemeData baseTheme = lightTheme(languageCode);
     
     final ColorScheme darkColorScheme = ColorScheme.fromSeed(
@@ -406,23 +430,28 @@ class AppTheme {
     );
   }
   
-  // Helper method to get text style based on language
+  // تعديل دالة _getTextStyle لتحسين عرض النص العربي
   static TextStyle _getTextStyle(
     bool isArabic, {
     double fontSize = 14,
     FontWeight fontWeight = FontWeight.normal,
     Color? color,
   }) {
-    return isArabic
-      ? GoogleFonts.cairo(
-          fontSize: fontSize,
-          fontWeight: fontWeight,
-          color: color,
-        )
-      : GoogleFonts.poppins(
-          fontSize: fontSize,
-          fontWeight: fontWeight,
-          color: color,
-        );
+    if (isArabic) {
+      return GoogleFonts.cairo(
+        fontSize: fontSize,
+        fontWeight: fontWeight,
+        color: color,
+        height: 1.5, // زيادة height للنص العربي
+        textBaseline: TextBaseline.alphabetic,
+      );
+    } else {
+      return GoogleFonts.poppins(
+        fontSize: fontSize,
+        fontWeight: fontWeight,
+        color: color,
+        height: 1.3,
+      );
+    }
   }
 }

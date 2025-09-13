@@ -17,9 +17,10 @@ import 'presentation/providers/journey_provider.dart'; // إضافة جديدة
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
+  // تم إزالة Paint.enableDithering لأنه غير مدعوم
+  
   // معالجة أخطاء التطبيق
   FlutterError.onError = (FlutterErrorDetails details) {
-    // طباعة الخطأ في وضع التطوير
     FlutterError.dumpErrorToConsole(details);
   };
   

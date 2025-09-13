@@ -1,4 +1,4 @@
-// lib/presentation/screens/home/home_screen.dart
+// lib/presentation/screens/home/home_screen.dart - نسخة متجاوبة محسنة
 import 'package:flutter/material.dart';
 import 'package:flutter_phosphor_icons/flutter_phosphor_icons.dart';
 import 'package:provider/provider.dart';
@@ -26,11 +26,18 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   bool _isLoadingPaths = false;
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
     _loadData();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadData() async {
@@ -49,17 +56,13 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     ResponsiveUtils.init(context);
 
-    // استخدام النصوص المحلية
     final localizations = AppLocalizations.of(context)!;
     final languageProvider = Provider.of<LanguageProvider>(context);
-
     final userProvider = Provider.of<UserProvider>(context);
     final user = userProvider.user;
-
     final pathsProvider = Provider.of<PathsProvider>(context);
     final featuredPaths = pathsProvider.featuredPaths;
     final suggestedPaths = pathsProvider.paths.take(3).toList();
-
     final savedPathsProvider = Provider.of<SavedPathsProvider>(context);
     final savedPaths = savedPathsProvider.savedPaths.take(2).toList();
 
@@ -68,23 +71,34 @@ class _HomeScreenState extends State<HomeScreen> {
         onRefresh: _loadData,
         color: AppColors.primary,
         child: CustomScrollView(
-          physics: const BouncingScrollPhysics(),
+          controller: _scrollController,
+          physics: const BouncingScrollPhysics(
+            parent: AlwaysScrollableScrollPhysics(),
+          ),
           slivers: [
+            // شريط التطبيق المتجاوب
             SliverAppBar(
-              expandedHeight: 120,
+              expandedHeight: context.adaptive(120),
               pinned: true,
               backgroundColor: Colors.white,
               elevation: 0,
               title: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Image.asset('assets/images/logo.png', height: 32),
-                  const SizedBox(width: 8),
-                  Text(
-                    localizations.get('app_name'),
-                    style: const TextStyle(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.bold,
+                  Image.asset(
+                    'assets/images/logo.png',
+                    height: context.adaptive(32),
+                  ),
+                  SizedBox(width: context.xs),
+                  Flexible(
+                    child: Text(
+                      localizations.get('app_name'),
+                      style: TextStyle(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.bold,
+                        fontSize: context.fontSize(20),
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ],
@@ -94,9 +108,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 // زر تغيير اللغة
                 IconButton(
                   icon: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
+                    padding: EdgeInsets.symmetric(
+                      horizontal: context.adaptive(8),
+                      vertical: context.adaptive(4),
                     ),
                     decoration: BoxDecoration(
                       color: AppColors.primary.withOpacity(0.1),
@@ -107,7 +121,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       style: TextStyle(
                         color: AppColors.primary,
                         fontWeight: FontWeight.bold,
-                        fontSize: 12,
+                        fontSize: context.fontSize(12),
                       ),
                     ),
                   ),
@@ -115,13 +129,13 @@ class _HomeScreenState extends State<HomeScreen> {
                     final newLanguage = languageProvider.isArabic ? 'en' : 'ar';
                     languageProvider.changeLanguage(newLanguage);
 
-                    // إظهار رسالة تأكيد
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(
                           languageProvider.isArabic
                               ? 'Language changed to English'
                               : 'تم تغيير اللغة إلى العربية',
+                          style: TextStyle(fontSize: context.fontSize(14)),
                         ),
                         duration: const Duration(seconds: 2),
                         behavior: SnackBarBehavior.floating,
@@ -130,46 +144,50 @@ class _HomeScreenState extends State<HomeScreen> {
                   },
                 ),
                 // زر الإشعارات
-                IconButton(
-                  icon: Stack(
-                    children: [
-                      const Icon(
-                        PhosphorIcons.bell,
-                        color: AppColors.textPrimary,
-                      ),
-                      Positioned(
-                        top: 0,
-                        right: 0,
-                        child: Container(
-                          width: 8,
-                          height: 8,
-                          decoration: const BoxDecoration(
-                            color: AppColors.secondary,
-                            shape: BoxShape.circle,
+                if (!context.isSmallPhone)
+                  IconButton(
+                    icon: Stack(
+                      children: [
+                        Icon(
+                          PhosphorIcons.bell,
+                          color: AppColors.textPrimary,
+                          size: context.iconSize(),
+                        ),
+                        Positioned(
+                          top: 0,
+                          right: 0,
+                          child: Container(
+                            width: 8,
+                            height: 8,
+                            decoration: const BoxDecoration(
+                              color: AppColors.secondary,
+                              shape: BoxShape.circle,
+                            ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
+                    onPressed: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            languageProvider.getText(
+                              'لا توجد إشعارات جديدة',
+                              'No new notifications',
+                            ),
+                            style: TextStyle(fontSize: context.fontSize(14)),
+                          ),
+                          duration: const Duration(seconds: 2),
+                        ),
+                      );
+                    },
                   ),
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          languageProvider.getText(
-                            'لا توجد إشعارات جديدة',
-                            'No new notifications',
-                          ),
-                        ),
-                        duration: const Duration(seconds: 2),
-                      ),
-                    );
-                  },
-                ),
                 // زر الإعدادات
                 IconButton(
-                  icon: const Icon(
+                  icon: Icon(
                     PhosphorIcons.gear,
                     color: AppColors.textPrimary,
+                    size: context.iconSize(),
                   ),
                   onPressed: () {
                     context.go('/profile/settings');
@@ -178,70 +196,72 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
               flexibleSpace: FlexibleSpaceBar(
                 background: Container(
-                  padding: const EdgeInsets.only(top: 90, left: 16, right: 16),
-                  child:
-                      user != null
-                          ? Row(
-                            children: [
-                              CircleAvatar(
-                                radius: 22,
-                                backgroundColor: AppColors.primary,
-                                child:
-                                    user.profileImageUrl != null
-                                        ? ClipRRect(
-                                          borderRadius: BorderRadius.circular(
-                                            22,
-                                          ),
-                                          child: Image.network(
-                                            user.profileImageUrl!,
-                                            width: 44,
-                                            height: 44,
-                                            fit: BoxFit.cover,
-                                          ),
-                                        )
-                                        : Text(
-                                          user.name
-                                              .substring(0, 1)
-                                              .toUpperCase(),
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Text(
-                                      languageProvider.getText(
-                                        'مرحباً، ${user.name}',
-                                        'Hello, ${user.name}',
+                  padding: EdgeInsets.only(
+                    top: context.adaptive(90),
+                    left: context.sm,
+                    right: context.sm,
+                  ),
+                  child: user != null
+                      ? Row(
+                          children: [
+                            CircleAvatar(
+                              radius: context.adaptive(22),
+                              backgroundColor: AppColors.primary,
+                              child: user.profileImageUrl != null
+                                  ? ClipRRect(
+                                      borderRadius: BorderRadius.circular(22),
+                                      child: Image.network(
+                                        user.profileImageUrl!,
+                                        width: context.adaptive(44),
+                                        height: context.adaptive(44),
+                                        fit: BoxFit.cover,
                                       ),
-                                      style: const TextStyle(
-                                        fontSize: 16,
+                                    )
+                                  : Text(
+                                      user.name.substring(0, 1).toUpperCase(),
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: context.fontSize(16),
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
-                                    Text(
-                                      languageProvider.getText(
-                                        'استمتع باستكشاف فلسطين اليوم!',
-                                        'Enjoy exploring Palestine today!',
-                                      ),
-                                      style: const TextStyle(
-                                        fontSize: 12,
-                                        color: AppColors.textSecondary,
-                                      ),
+                            ),
+                            SizedBox(width: context.sm),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    languageProvider.getText(
+                                      'مرحباً، ${user.name}',
+                                      'Hello, ${user.name}',
                                     ),
-                                  ],
-                                ),
+                                    style: TextStyle(
+                                      fontSize: context.fontSize(16),
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
+                                  ),
+                                  Text(
+                                    languageProvider.getText(
+                                      'استمتع باستكشاف فلسطين اليوم!',
+                                      'Enjoy exploring Palestine today!',
+                                    ),
+                                    style: TextStyle(
+                                      fontSize: context.fontSize(12),
+                                      color: AppColors.textSecondary,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
+                                  ),
+                                ],
                               ),
-                            ],
-                          )
-                          : null,
+                            ),
+                          ],
+                        )
+                      : null,
                 ),
               ),
             ),
@@ -249,15 +269,19 @@ class _HomeScreenState extends State<HomeScreen> {
             // شريط البحث والأزرار السريعة
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+                padding: context.responsivePadding(
+                  horizontal: context.isSmallPhone ? 12 : 16,
+                  vertical: context.isSmallPhone ? 12 : 16,
+                ),
                 child: Column(
                   children: [
                     const SearchBarWidget(),
-                    const SizedBox(height: 16),
+                    SizedBox(height: context.sm),
 
-                    // الأزرار السريعة مع وظائف عاملة
+                    // الأزرار السريعة
                     SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
+                      physics: const BouncingScrollPhysics(),
                       child: Row(
                         children: [
                           _QuickActionChip(
@@ -278,58 +302,51 @@ class _HomeScreenState extends State<HomeScreen> {
                               Future.delayed(
                                 const Duration(milliseconds: 100),
                                 () {
-                                  final pathsProvider =
-                                      Provider.of<PathsProvider>(
-                                        context,
-                                        listen: false,
-                                      );
-                                  pathsProvider.setActivityFilter(
-                                    ActivityType.climbing,
+                                  final pathsProvider = Provider.of<PathsProvider>(
+                                    context,
+                                    listen: false,
                                   );
+                                  pathsProvider.setActivityFilter(ActivityType.climbing);
                                 },
                               );
                             },
                           ),
-                          _QuickActionChip(
-                            icon: PhosphorIcons.campfire,
-                            label: localizations.get('camping'),
-                            onTap: () {
-                              context.go('/paths');
-                              Future.delayed(
-                                const Duration(milliseconds: 100),
-                                () {
-                                  final pathsProvider =
-                                      Provider.of<PathsProvider>(
-                                        context,
-                                        listen: false,
-                                      );
-                                  pathsProvider.setActivityFilter(
-                                    ActivityType.camping,
-                                  );
-                                },
-                              );
-                            },
-                          ),
-                          _QuickActionChip(
-                            icon: PhosphorIcons.tree,
-                            label: localizations.get('nature'),
-                            onTap: () {
-                              context.go('/paths');
-                              Future.delayed(
-                                const Duration(milliseconds: 100),
-                                () {
-                                  final pathsProvider =
-                                      Provider.of<PathsProvider>(
-                                        context,
-                                        listen: false,
-                                      );
-                                  pathsProvider.setActivityFilter(
-                                    ActivityType.nature,
-                                  );
-                                },
-                              );
-                            },
-                          ),
+                          if (!context.isSmallPhone) ...[
+                            _QuickActionChip(
+                              icon: PhosphorIcons.campfire,
+                              label: localizations.get('camping'),
+                              onTap: () {
+                                context.go('/paths');
+                                Future.delayed(
+                                  const Duration(milliseconds: 100),
+                                  () {
+                                    final pathsProvider = Provider.of<PathsProvider>(
+                                      context,
+                                      listen: false,
+                                    );
+                                    pathsProvider.setActivityFilter(ActivityType.camping);
+                                  },
+                                );
+                              },
+                            ),
+                            _QuickActionChip(
+                              icon: PhosphorIcons.tree,
+                              label: localizations.get('nature'),
+                              onTap: () {
+                                context.go('/paths');
+                                Future.delayed(
+                                  const Duration(milliseconds: 100),
+                                  () {
+                                    final pathsProvider = Provider.of<PathsProvider>(
+                                      context,
+                                      listen: false,
+                                    );
+                                    pathsProvider.setActivityFilter(ActivityType.nature);
+                                  },
+                                );
+                              },
+                            ),
+                          ],
                         ],
                       ),
                     ),
@@ -347,9 +364,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     onViewAll: () => context.go('/paths'),
                   ),
                   if (_isLoadingPaths)
-                    const SizedBox(
-                      height: 200,
-                      child: Center(child: CircularProgressIndicator()),
+                    SizedBox(
+                      height: context.adaptive(200),
+                      child: const Center(child: CircularProgressIndicator()),
                     )
                   else
                     FeaturedPathsCarousel(paths: featuredPaths),
@@ -367,16 +384,17 @@ class _HomeScreenState extends State<HomeScreen> {
                       onViewAll: () => context.go('/profile/saved'),
                     ),
                     Container(
-                      height: 220,
-                      padding: const EdgeInsets.only(left: 16),
+                      height: context.adaptive(220),
+                      padding: EdgeInsets.only(left: context.sm),
                       child: ListView.builder(
                         scrollDirection: Axis.horizontal,
+                        physics: const BouncingScrollPhysics(),
                         itemCount: savedPaths.length,
                         itemBuilder: (context, index) {
                           final path = savedPaths[index];
                           return Container(
-                            width: 280,
-                            padding: const EdgeInsets.only(right: 16),
+                            width: context.adaptive(280),
+                            padding: EdgeInsets.only(right: context.sm),
                             child: PathCard(
                               path: path,
                               onTap: () => context.go('/paths/${path.id}'),
@@ -398,28 +416,29 @@ class _HomeScreenState extends State<HomeScreen> {
                     onViewAll: () => context.go('/paths'),
                   ),
                   if (_isLoadingPaths)
-                    const SizedBox(
-                      height: 200,
-                      child: Center(child: CircularProgressIndicator()),
+                    SizedBox(
+                      height: context.adaptive(200),
+                      child: const Center(child: CircularProgressIndicator()),
                     )
                   else
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      padding: context.responsivePadding(horizontal: 16),
                       child: Column(
-                        children:
-                            suggestedPaths.map((path) {
-                              return PathCard(
-                                path: path,
-                                onTap: () => context.go('/paths/${path.id}'),
-                              );
-                            }).toList(),
+                        children: suggestedPaths.map((path) {
+                          return PathCard(
+                            path: path,
+                            onTap: () => context.go('/paths/${path.id}'),
+                          );
+                        }).toList(),
                       ),
                     ),
                 ],
               ),
             ),
 
-            const SliverToBoxAdapter(child: SizedBox(height: 100)),
+            SliverToBoxAdapter(
+              child: SizedBox(height: context.adaptive(100)),
+            ),
           ],
         ),
       ),
@@ -443,22 +462,30 @@ class _QuickActionChip extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        margin: const EdgeInsets.only(right: 12),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        margin: EdgeInsets.only(right: context.xs),
+        padding: context.responsivePadding(
+          horizontal: context.isSmallPhone ? 12 : 16,
+          vertical: context.isSmallPhone ? 6 : 8,
+        ),
         decoration: BoxDecoration(
           color: AppColors.primary.withOpacity(0.1),
           borderRadius: BorderRadius.circular(30),
         ),
         child: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 18, color: AppColors.primary),
-            const SizedBox(width: 6),
+            Icon(
+              icon,
+              size: context.iconSize(),
+              color: AppColors.primary,
+            ),
+            SizedBox(width: context.xs),
             Text(
               label,
               style: TextStyle(
                 color: AppColors.primary,
                 fontWeight: FontWeight.bold,
-                fontSize: 14,
+                fontSize: context.fontSize(14),
               ),
             ),
           ],
